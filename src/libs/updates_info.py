@@ -4,7 +4,7 @@ from typing import List
 from semver import Version
 
 
-class UpdateData:
+class UpdatesInfo:
     release_versions: List[Version]
     release_version_steps: dict
     latest_version: Version

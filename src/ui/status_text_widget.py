@@ -2,6 +2,9 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QFont
 from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout
 from pyqtwaitingspinner import WaitingSpinner, SpinnerParameters, SpinDirection
+from qtawesome import IconWidget
+
+from src.libs.icons import IconsLib, Icon
 
 SPINNER_PARAMS = SpinnerParameters(  # These can be generated in the spinner editor `spinner-conf`
     roundness=100.0,
@@ -17,25 +20,29 @@ SPINNER_PARAMS = SpinnerParameters(  # These can be generated in the spinner edi
     center_on_parent=True,
     disable_parent_when_spinning=False,
 )
-SPINNER_WIDGET_WIDTH = 20
-SPINNER_WIDGET_HEIGHT = 20
+SPINNER_WIDGET_WIDTH = 30
+SPINNER_WIDGET_HEIGHT = 30
+MAX_TEXT_WIDTH = 300
 
 
 class StatusTextWidget(QWidget):
+    icon: IconWidget
     status_text: QLabel
     spinner_widget: QWidget
     spinner: WaitingSpinner
 
-    initial_status: str
-
-    def __init__(self, initial_status_text: str):
+    def __init__(self):
         super().__init__()
 
         layout = QHBoxLayout()
         layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
 
-        self.initial_status = initial_status_text
-        self.status_text = QLabel(initial_status_text)
+        self.icon = IconWidget()
+        layout.addWidget(self.icon)
+
+        self.status_text = QLabel()
+        # self.status_text.setWordWrap(True)
+        self.status_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.status_text.setFixedHeight(
             SPINNER_WIDGET_HEIGHT)  # Prevents vertical repositioning when spinner is activated
         font = QFont()
@@ -58,16 +65,22 @@ class StatusTextWidget(QWidget):
             self.spinner.stop()
             self.spinner_widget.setFixedSize(0, 0)
 
-    def set_status(self, status: str, spinner: bool = False):
+    def set_status(self, status: str, spinner: bool = False, icon: Icon = None):
+        self.status_text.setWordWrap(False)  # Disable word wrap for determining correct size hint
         self.status_text.setText(status)
         self.status_text.setStyleSheet('')
+        width = min(self.status_text.sizeHint().width(), MAX_TEXT_WIDTH)
+        self.status_text.setFixedWidth(width)
+        self.status_text.setWordWrap(True)
         self.set_spinner_active(spinner)
+        if icon:
+            self.icon.setIcon(IconsLib.get_icon(icon))
 
     def set_warning_status(self, status: str):
         self.status_text.setText(status)
         self.status_text.setStyleSheet('color: red;')
 
     def reset_status(self):
-        self.status_text.setText(self.initial_status)
+        self.status_text.setText('')
         self.status_text.setStyleSheet('')
         self.set_spinner_active(False)
